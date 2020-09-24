@@ -72,8 +72,12 @@ class BankingSystem:
         cursor.close()
 
     def log_in_accont(self):
-        entered_card_no = int(input("Enter your card number:\n"))
-        entered_pin = int(input("Enter your PIN:\n"))
+        try:    
+            entered_card_no = int(input("Enter your card number:\n"))
+            entered_pin = int(input("Enter your PIN:\n"))
+        except:
+            print('Please put only numbers.\n')
+            return
         cursor = self.my_connection.cursor()
         self.logged = 0
         cursor.execute('''SELECT card_no, pin FROM cards 
@@ -105,7 +109,11 @@ class BankingSystem:
         cursor.close()
    
     def add_income(self):
-        to_add = int(input('Enter income:'))
+        try:
+            to_add = int(input('Enter income:'))
+        except:
+            print('Please put only numbers.\n')
+            return
         all_balance = to_add + self.new_balance()
         self.money_in_out(all_balance, self.records[0][0])
         print('Income was added!\n')
@@ -116,7 +124,11 @@ class BankingSystem:
             
     def transfer(self):
         print('Transfer')
-        destination = int(input('Enter card number:\n'))
+        try:
+            destination = int(input('Enter card number:\n'))
+        except:
+            print('Please put only numbers.\n')
+            return
         dest_to_check = destination // 10
         self.check_for_luhn(dest_to_check)
         luhn_to_check = destination % 10
@@ -128,7 +140,11 @@ class BankingSystem:
         cursor.close()
         if luhn_to_check == self.luhn_check:
             if len(if_in) >= 1 :
-                self.in_transfer = int(input("Enter how much money you want to transfer:"))
+                try:
+                    self.in_transfer = int(input("Enter how much money you want to transfer:"))
+                except:
+                    print('Please put only numbers.\n')
+                    return
                 if self.in_transfer <= self.new_balance():
                     print('Success!')
                     self.minus_income()
@@ -141,15 +157,22 @@ class BankingSystem:
             print("Probably you made a mistake in the card number. Please try again!\n")
 
     def close_account(self):
-        cursor = self.my_connection.cursor()
-        cursor.execute(('''DELETE FROM cards 
-                        WHERE card_no = ? AND pin = ?'''), 
-                       (self.records[0][0], self.records[0][1]))
-        self.my_connection.commit()
-        cursor.close()
-        print('The account has been closed!\n')
-        return
-        
+        comfirm = input("Are you sure you want to proceed?:(y/n)")
+        if comfirm == 'y':
+            cursor = self.my_connection.cursor()
+            cursor.execute(('''DELETE FROM cards 
+                           WHERE card_no = ? AND pin = ?'''), 
+                          (self.records[0][0], self.records[0][1]))
+            self.my_connection.commit()
+            cursor.close()
+            print('The account has been closed!\n')
+            return
+        elif comfirm == 'n':
+            self.log_in_options()
+        elif comfirm != 'y' or comfirm != 'n':
+                print("Please put y or n.\n")
+                self.close_account()
+                
     def log_in_options(self):
         if self.logged == 1:
             dif_option = input("1. Balance\n2. Add income\n3. Do transfer"
